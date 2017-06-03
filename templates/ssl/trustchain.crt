@@ -1,0 +1,3 @@
+{{ vimbadmin_nginx_ssl_root_certificate }}
+
+{{ vimbadmin_nginx_ssl_intermediate_certificate }}

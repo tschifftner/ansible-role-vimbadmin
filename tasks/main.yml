@@ -1,0 +1,25 @@
+- name: Assert required settings
+  assert:
+    that:
+      - "vimbadmin_securitysalt != ''"
+      - "vimbadmin_rememberme_salt != ''"
+      - "vimbadmin_password_salt != ''"
+
+- name: Set failover facts
+  set_fact:
+    _vimbadmin_install_database: "{{ mariadb_replication_role is defined and mariadb_replication_role == 'master' and mariadb_server_id == 1 }}"
+  when: _vimbadmin_install_database is not defined
+  tags: ['always']
+
+- include: install.yml
+  tags: ['vimbadmin-install']
+
+- include: ssl.yml
+  tags: ['vimbadmin-ssl']
+
+- include: configure.yml
+  tags: ['vimbadmin-configure']
+
+- include: database.yml
+  when: _vimbadmin_install_database
+  tags: ['vimbadmin-database']

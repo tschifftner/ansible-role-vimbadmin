@@ -1,0 +1,41 @@
+---
+
+- name: Check database state
+  shell: '{{ item }}'
+  register: _vimbadmin_db_state
+  changed_when: false #idempotence
+  with_items:
+    - 'mysql -e "USE {{ vimbadmin_sql_database }}; SHOW TABLES;" | wc -l'
+    - 'mysql -e "USE {{ vimbadmin_sql_database }}; SHOW COLUMNS FROM mailbox;" | grep sendonly | wc -l'
+    - 'mysql -e "USE {{ vimbadmin_sql_database }}; SHOW TABLES;" | grep tlspolicies | wc -l'
+
+- name: Set sql files
+  set_fact:
+    _vimbadmin_sql_files:
+      - { file: sendonly.sql, required: "{{ _vimbadmin_db_state.results.1.stdout == '0' }}" }
+      - { file: tlspolicies.sql, required: "{{ _vimbadmin_db_state.results.2.stdout == '0' }}" }
+
+- name: Create database
+  shell: './bin/doctrine2-cli.php orm:schema-tool:create'
+  args:
+    chdir: '{{ vimbadmin_root_dir }}'
+  become_user: '{{ vimbadmin_user }}'
+  when: _vimbadmin_db_state.results.0.stdout == '0'
+
+- name: Copy required sql files
+  template:
+    src: 'sql/{{ item.file }}'
+    dest: '/tmp/{{ item.file }}'
+  when: item.required
+  with_items: '{{ _vimbadmin_sql_files }}'
+
+- name: Import required sql files
+  mysql_db:
+    state: import
+    name: '{{ vimbadmin_sql_database }}'
+    target: '/tmp/{{ item.file }}'
+    login_user: '{{ vimbadmin_sql_user }}'
+    login_password: '{{ vimbadmin_sql_password }}'
+    login_host: '{{ vimbadmin_sql_host }}'
+  when: item.required
+  with_items: '{{ _vimbadmin_sql_files }}'

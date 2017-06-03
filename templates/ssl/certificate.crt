@@ -1,0 +1,7 @@
+{{ vimbadmin_nginx_ssl_certificate }}
+
+{{ vimbadmin_nginx_ssl_intermediate_certificate }}
+
+{% if vimbadmin_nginx_ssl_intermediate_certificate2 is defined %}
+{{ vimbadmin_nginx_ssl_intermediate_certificate2 }}
+{% endif %}

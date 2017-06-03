@@ -1,0 +1,82 @@
+---
+
+- name: Create group
+  group:
+    name: '{{ vimbadmin_group }}'
+    state: present
+
+- name: Create user
+  user:
+    name: '{{ vimbadmin_user }}'
+    group: '{{ vimbadmin_group }}'
+    state: present
+
+- name: Ensure git is installed
+  apt:
+    pkg: '{{ item }}'
+    state: present
+  with_items:
+    - git
+    - acl
+
+- name: prepare directories
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ vimbadmin_user }}'
+    group: '{{ vimbadmin_group }}'
+    mode: '0711'
+  with_items:
+    - '{{ vimbadmin_working_dir }}'
+    - '{{ vimbadmin_working_dir }}/logs'
+    - '{{ vimbadmin_working_dir }}/sessions'
+
+- name: Unarchive file
+  register: vimbadmin_extract
+  unarchive:
+    src: '{{ vimbadmin_download_url }}'
+    dest: '{{ vimbadmin_working_dir }}'
+    copy: no
+    owner: '{{ vimbadmin_user }}'
+    group: '{{ vimbadmin_group }}'
+    mode: '0755'
+    creates: '{{ vimbadmin_root_dir }}'
+
+- name: prepare directories
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ vimbadmin_user }}'
+    group: '{{ vimbadmin_group }}'
+    mode: '0777'
+  with_items:
+    - '{{ vimbadmin_working_dir }}/tmp'
+
+- name: Run composer install
+  composer:
+    command: "install"
+    working_dir: "{{ vimbadmin_root_dir }}"
+    no_dev: true
+  become_user: '{{ vimbadmin_user }}'
+
+- name: Copy .htaccess
+  template:
+    src: '.htaccess'
+    dest: '{{ vimbadmin_root_dir }}/public/.htaccess'
+
+- name: Check if dovecot.conf exists
+  register: _dovecot_conf
+  stat:
+    path: /etc/dovecot/dovecot.conf
+
+
+- name: Grand acl permissions
+  acl:
+    name: /etc/dovecot/dovecot.conf
+    entity: '{{ item }}'
+    etype: user
+    permissions: r
+    state: present
+  when: _dovecot_conf.stat.exists
+  with_items:
+    - '{{ vimbadmin_user }}'

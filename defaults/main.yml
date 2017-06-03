@@ -1,0 +1,64 @@
+---
+vimbadmin_install_version: '3.0.15'
+
+# See https://vimbadmin.net/download/
+vimbadmin_download_url: 'https://github.com/opensolutions/ViMbAdmin/archive/{{ vimbadmin_install_version }}.tar.gz'
+
+# User
+vimbadmin_user: 'vimbadmin'
+vimbadmin_group: 'vimbadmin'
+
+# Database
+vimbadmin_sql_host: "{{ mailserver_db_host | default('127.0.0.1') }}"
+vimbadmin_sql_database: "{{ mailserver_db_database | default('vimbadmin') }}"
+vimbadmin_sql_user: "{{ mailserver_db_user | default('vimbadmin') }}"
+vimbadmin_sql_password: "{{ mailserver_db_password | default('') }}"
+
+# Salts
+vimbadmin_securitysalt: ''
+vimbadmin_rememberme_salt: ''
+vimbadmin_password_salt: ''
+
+# Folders
+vimbadmin_working_dir: '/opt/vimbadmin'
+vimbadmin_root_dir: '{{ vimbadmin_working_dir }}/ViMbAdmin-{{ vimbadmin_install_version }}'
+
+# Nignx
+vimbadmin_nginx_listen: '444'
+vimbadmin_nginx_server_name: '{{ ansible_hostname }}'
+
+vimbadmin_nginx_ssl_redirect: 'https://{{ vimbadmin_nginx_server_name }}$request_uri'
+vimbadmin_nginx_ssl_save_path: '{{ vimbadmin_working_dir }}/.ssl'
+
+vimbadmin_nginx_ssl_certificate: '{{ mailserver_ssl_certificate | default(omit) }}'
+vimbadmin_nginx_ssl_certificate_key: '{{ mailserver_ssl_certificate_key | default(omit) }}'
+vimbadmin_nginx_ssl_intermediate_certificate: '{{ mailserver_ssl_intermediate_certificate | default(omit) }}'
+vimbadmin_nginx_ssl_root_certificate: '{{ mailserver_ssl_intermediate_certificate | default(omit) }}'
+
+vimbadmin_nginx_ssl_certificate_path: '{{ vimbadmin_nginx_ssl_save_path }}/certificate.crt'
+vimbadmin_nginx_ssl_certificate_key_path: '{{ vimbadmin_nginx_ssl_save_path }}/certificate.key'
+vimbadmin_nginx_ssl_trusted_certificate_path: '{{ vimbadmin_nginx_ssl_save_path }}/trustchain.crt'
+
+# Identity
+vimbadmin_conf_orgname: 'Example Limited'
+vimbadmin_conf_name: 'Example Support Team'
+vimbadmin_conf_email: 'support@example.com'
+vimbadmin_conf_autobot_name: 'ViMbAdmin Autobot'
+vimbadmin_conf_autobot_email: 'autobot@example.com'
+vimbadmin_conf_mailer_name: 'ViMbAdmin Autobot'
+vimbadmin_conf_mailer_email: 'no-reply@example.com'
+vimbadmin_conf_sitename: 'ViMbAdmin'
+vimbadmin_conf_siteurl: 'https://www.example.com/vimbadmin/'
+vimbadmin_conf_email_name: 'Administrator'
+vimbadmin_conf_email_address: 'postadmin@example.com'
+
+# Security - BLF CRYPT is not yet supported by Debian
+vimbadmin_conf_password_scheme: 'dovecot:SHA512-CRYPT'
+
+
+vimbadmin_conf_maildir: "maildir:{{ mailserver_vmail_dir | default('/srv/vmail') }}/%d/%u/mail:LAYOUT=fs"
+vimbadmin_conf_homedir: "{{ mailserver_vmail_dir | default('/srv/vmail') }}/%d/%u"
+vimbadmin_conf_uid: '{{ mailserver_vmail_uid | default(2000) }}'
+vimbadmin_conf_gid: '{{ mailserver_vmail_gid | default(2000) }}'
+
+_vimbadmin_sql_files: []

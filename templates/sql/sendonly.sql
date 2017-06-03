@@ -1,0 +1,1 @@
+ALTER TABLE `mailbox` ADD `sendonly` TINYINT(1) NOT NULL DEFAULT '0' AFTER `access_restriction`;
